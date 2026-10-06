@@ -13,6 +13,8 @@ class GameEngine:
         self.feedback_msg = "Enter a number between 1 and 100"
         self.feedback_color = (220, 220, 220)
         self.game_won = False
+        self.max_attempts = 10
+        self.game_over = False
         self.min_possible = 1
         self.max_possible = 100
         self.font_range = pygame.font.SysFont(None, 28)
@@ -27,7 +29,7 @@ class GameEngine:
         self.font_btn = pygame.font.SysFont(None, 26)
 
     def submit_guess(self):
-        if self.game_won:
+        if self.game_won or self.game_over:
             return
 
         text = self.input_box.text.strip()
@@ -56,7 +58,12 @@ class GameEngine:
             self.feedback_color = (80, 220, 90)
             self.game_won = True
 
-        del self.history[5:]   
+        del self.history[5:]   # keep only the 5 most recent
+
+        if not self.game_won and self.attempts >= self.max_attempts:
+            self.game_over = True
+            self.feedback_msg = f"GAME OVER! The number was {self.secret_number}"
+            self.feedback_color = (240, 100, 80)   
 
     def reset(self):
         self.secret_number = random.randint(1, 100)
@@ -68,7 +75,8 @@ class GameEngine:
         self.max_possible = 100
         self.input_box.clear()
         self.history = []
-        
+        self.game_over = False
+
     def _draw_arrow(self, screen, cx, cy, up, color):
         if up:
             points = [(cx, cy - 9), (cx - 8, cy + 7), (cx + 8, cy + 7)]
@@ -82,7 +90,7 @@ class GameEngine:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self.submit_guess()
-            elif event.key == pygame.K_r and self.game_won:
+            elif event.key == pygame.K_r and (self.game_won or self.game_over):
                 self.reset()
 
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -98,7 +106,9 @@ class GameEngine:
         title_surf = self.font_title.render("Number Guessing Arena", True, (245, 245, 245))
         screen.blit(title_surf, (self.cx - title_surf.get_width() // 2, 35))
 
-        attempts_surf = self.font_medium.render(f"Attempts: {self.attempts}", True, (180, 185, 195))
+        attempts_surf = self.font_medium.render(
+            f"Attempts: {self.attempts} / {self.max_attempts}", True, (180, 185, 195)
+        )
         screen.blit(attempts_surf, (self.cx - attempts_surf.get_width() // 2, 95))
         self.input_box.render(screen)
 
@@ -141,3 +151,20 @@ class GameEngine:
             self._draw_arrow(screen, panel.x + 35, row_cy, direction == "high", color)
             num_surf = self.font_medium.render(str(guess), True, color)
             screen.blit(num_surf, (panel.x + 65, row_cy - num_surf.get_height() // 2))
+               
+        if self.game_over:
+            overlay = pygame.Surface((self.play_width, self.height), pygame.SRCALPHA)
+            overlay.fill((20, 22, 28, 225))
+            screen.blit(overlay, (0, 0))
+
+            over_surf = self.font_title.render("GAME OVER", True, (240, 100, 80))
+            screen.blit(over_surf, (self.cx - over_surf.get_width() // 2, 110))
+
+            label_surf = self.font_medium.render("The secret number was", True, (180, 185, 195))
+            screen.blit(label_surf, (self.cx - label_surf.get_width() // 2, 170))
+
+            num_surf = self.font_title.render(str(self.secret_number), True, (255, 220, 80))
+            screen.blit(num_surf, (self.cx - num_surf.get_width() // 2, 200))
+
+            restart_surf = self.font_medium.render("Press [R] to Start a New Game", True, (245, 245, 245))
+            screen.blit(restart_surf, (self.cx - restart_surf.get_width() // 2, 270))
