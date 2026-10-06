@@ -22,9 +22,15 @@ class GameEngine:
     def submit_guess(self):
         if self.game_won:
             return
-            
-        guess = int(self.input_box.text)
-        
+
+        text = self.input_box.text.strip()
+        if not text:
+            self.feedback_msg = "Please enter a number first!"
+            self.feedback_color = (255, 200, 60)
+            return
+
+        guess = int(text)
+
         self.attempts += 1
         self.input_box.clear()
 
