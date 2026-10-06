@@ -11,6 +11,9 @@ class GameEngine:
         self.feedback_msg = "Enter a number between 1 and 100"
         self.feedback_color = (220, 220, 220)
         self.game_won = False
+        self.min_possible = 1
+        self.max_possible = 100
+        self.font_range = pygame.font.SysFont(None, 28)
 
         self.input_box = TextBox(width // 2 - 110, 150, 120, 48)
         self.submit_btn = pygame.Rect(width // 2 + 25, 150, 100, 48)
@@ -37,9 +40,11 @@ class GameEngine:
         if guess < self.secret_number:
             self.feedback_msg = f"TOO LOW! (Guess was {guess})"
             self.feedback_color = (80, 160, 240)
+            self.min_possible = max(self.min_possible, guess + 1)
         elif guess > self.secret_number:
             self.feedback_msg = f"TOO HIGH! (Guess was {guess})"
             self.feedback_color = (240, 100, 80)
+            self.max_possible = min(self.max_possible, guess - 1)
         else:
             self.feedback_msg = f"CORRECT! Found in {self.attempts} attempts."
             self.feedback_color = (80, 220, 90)
@@ -51,8 +56,9 @@ class GameEngine:
         self.feedback_msg = "Enter a number between 1 and 100"
         self.feedback_color = (220, 220, 220)
         self.game_won = False
+        self.min_possible = 1
+        self.max_possible = 100
         self.input_box.clear()
-
     def handle_event(self, event):
         self.input_box.handle_event(event)
 
@@ -89,6 +95,11 @@ class GameEngine:
 
         feedback_surf = self.font_medium.render(self.feedback_msg, True, self.feedback_color)
         screen.blit(feedback_surf, (self.width // 2 - feedback_surf.get_width() // 2, 235))
+
+        range_surf = self.font_range.render(
+            f"Range: {self.min_possible} - {self.max_possible}", True, (180, 185, 195)
+        )
+        screen.blit(range_surf, (self.width // 2 - range_surf.get_width() // 2, 265))
 
         if self.game_won:
             restart_surf = self.font_medium.render("Press [R] to Start a New Game", True, (255, 220, 80))
